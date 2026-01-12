@@ -15,3 +15,14 @@ Command line tool to find SSH hosts in a specified IP range and and test if logi
 e.g.,
 
     ./ssh_host_finder.sh jetson yahboom 192.168.1.0/24
+
+
+## Issue
+
+If 
+```
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+```
+you need to try to login manually because you need to erase the existing ssh key.
