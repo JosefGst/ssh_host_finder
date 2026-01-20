@@ -56,14 +56,32 @@ echo -e "Found SSH hosts:\n$HOSTS"
 
 # Try to login to each found host and collect successful IPs
 SUCCESSFUL_IPS=()
+
 for ip in $HOSTS; do
     echo "Trying SSH login to $ip..."
-    sshpass -e ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 "$USERNAME"@$ip exit
-    if [ $? -eq 0 ]; then
+    # Capture SSH output and status
+    SSH_OUTPUT=$(sshpass -e ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 "$USERNAME"@$ip exit 2>&1)
+    SSH_STATUS=$?
+    if [ $SSH_STATUS -eq 0 ]; then
         echo "Login successful: $ip"
         SUCCESSFUL_IPS+=("$ip")
     else
-        echo "Login failed: $ip"
+        # Check for host key warning
+        if echo "$SSH_OUTPUT" | grep -q "REMOTE HOST IDENTIFICATION HAS CHANGED"; then
+            echo "Host key warning detected for $ip. Attempting to remove offending key and retry..."
+            ssh-keygen -f "$HOME/.ssh/known_hosts" -R "$ip"
+            # Retry login
+            SSH_OUTPUT2=$(sshpass -e ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 "$USERNAME"@$ip exit 2>&1)
+            SSH_STATUS2=$?
+            if [ $SSH_STATUS2 -eq 0 ]; then
+                echo "Login successful after key removal: $ip"
+                SUCCESSFUL_IPS+=("$ip")
+            else
+                echo "Login failed after key removal: $ip"
+            fi
+        else
+            echo "Login failed: $ip"
+        fi
     fi
 done
 
